@@ -25,11 +25,18 @@ struct Token {
 // The Token currently focused on
 Token *token;
 
-// The function to report an error
-// Same arguments as one of printf
-void error(char *fmt, ...) {
+// Inputed program string
+char *user_input;
+
+// The function to report position of an error
+void error_at(char *loc, char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
+
+  int pos = loc - user_input;
+  fprintf(stderr, "%s\n", user_input);
+  fprintf(stderr, "%*s", pos, " "); 
+  fprintf(stderr, "^ ");
   vfprintf(stderr, fmt, ap);
   fprintf(stderr, "\n");
   exit(1);
@@ -48,7 +55,7 @@ bool consume(char op) {
 // Otherwise report an error.
 void expect(char op) {
   if (token->kind != TK_RESERVED || token->str[0] != op)
-    error("Not '%c'", op);
+    error_at(token->str, "Not '%c'", op);
   token = token->next;
 }
 
@@ -56,7 +63,7 @@ void expect(char op) {
 // Otherwise report an error.
 int expect_number() {
   if (token->kind != TK_NUM) 
-    error("Not number");
+    error_at(token->str, "Not number");
   int val = token->val;
   token = token->next;
   return val;
@@ -99,7 +106,7 @@ Token *tokenize(char *p) {
       continue;
     }
 
-    error("Unable to tokenize");
+    error_at(cur->str, "Unable to tokenize");
   }
 
   new_token(TK_EOF, cur, p);
@@ -111,9 +118,11 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Number of arguments is invalid.\n");
     return 1;
   }
+
+  user_input = argv[1];
   
   // Tokenize
-  token = tokenize(argv[1]);
+  token = tokenize(user_input);
 
   // Output first part of asembly
   printf(".intel_syntax noprefix\n");
