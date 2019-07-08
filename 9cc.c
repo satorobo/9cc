@@ -25,6 +25,23 @@ struct Token {
 // The Token currently focused on
 Token *token;
 
+// Kind of abstract syntax tree(AST)
+typedef enum {
+   ND_ADD, // +
+   ND_SUB, // -
+   ND_NUM, // Integer
+} NodeKind;
+
+typedef struct Node Node;
+
+// Type of nodes of abstract syntax tree
+struct Node {
+  NodeKind kind; // Type of nodes
+  Node *lhs;     // Left-hand side childe node
+  Node *rhs;     // Right-hand side childe node
+  int val;       // It is only used when kind is ND_NUM
+};
+
 // Inputed program string
 char *user_input;
 
@@ -113,39 +130,81 @@ Token *tokenize(char *p) {
   return head.next;
 }
 
+Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = kind;
+  node->lhs = lhs;
+  node->rhs = rhs;
+  return node;
+}
+
+Node *new_node_num(int val) {
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = ND_NUM;
+  node->val = val;
+  return node;
+}
+
+Node *expr() {
+  Node *node = new_node_num(expect_number());
+  
+  for (;;) {
+    if (consume('+'))
+      node = new_node(ND_ADD, node, expr());
+    else if (consume('-'))
+      node = new_node(ND_SUB, node, expr());      
+    else
+      return node;
+  }
+}
+
+void gen(Node *node) {
+  if (node->kind == ND_NUM) {
+    printf("  push %d\n", node->val);
+    return;
+  }
+
+  gen(node->lhs);
+  gen(node->rhs);
+
+  printf("  pop rdi\n");
+  printf("  pop rax\n");
+
+  switch (node->kind) {
+  case ND_ADD:
+    printf("  add rax, rdi\n");
+    break;
+  case ND_SUB:    
+    printf("  sub rax, rdi\n");
+    break;
+  }
+
+  printf("  push rax\n");
+}
+
 int main(int argc, char **argv) {
   if (argc != 2) {
     fprintf(stderr, "Number of arguments is invalid.\n");
     return 1;
   }
 
+  // Tokenize and parse
   user_input = argv[1];
-  
-  // Tokenize
   token = tokenize(user_input);
+  Node *node = expr();
+  
 
   // Output first part of asembly
   printf(".intel_syntax noprefix\n");
   printf(".global main\n");
   printf("main:\n");
 
-  // Check whether first of formula is number or not,
-  // and print first mov instruction
-  printf("  mov rax, %ld\n", expect_number());
-
-  // Comsume order of tokens that '+ <num> or - <num>'
-  // and print asembly
-  while (!at_eof()) {
-    if (consume('+')) {
-      printf("  add rax, %ld\n", expect_number());
-      continue;
-    }
-
-    expect('-');
-    printf("  sub rax, %ld\n", expect_number());
-
-  }
-
+  // Generate asembly code going down abstract syntax tree
+  gen(node);
+  
+  // Since the result value of whole formula should be at the top of the stack,
+  // load the result value into rax and return it.
+  printf("  pop rax\n");
   printf("  ret\n");
   return 0;
 }
