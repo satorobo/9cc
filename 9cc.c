@@ -44,6 +44,10 @@ struct Node {
   int val;       // It is only used when kind is ND_NUM
 };
 
+Node *term();
+Node *expr();
+Node *mul();
+
 // Inputed program string
 char *user_input;
 
@@ -114,7 +118,7 @@ Token *tokenize(char *p) {
       continue;
     }
 
-    if (*p == '+' || *p == '-' || *p == '*' || *p == '/') {
+    if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')') {
       cur = new_token(TK_RESERVED, cur, p++);
       continue;
     }
@@ -147,14 +151,26 @@ Node *new_node_num(int val) {
   return node;
 }
 
+Node *term(){
+  // If next token is "(", it must be "(" expr ")"
+  if (consume('(')) {
+    Node *node = expr();
+    expect(')');
+    return node;
+  }
+
+  // Otherwise it must be number
+  return new_node_num(expect_number());
+}
+
 Node *mul(){
-  Node *node = new_node_num(expect_number());
+  Node *node = term();
   
   for (;;) {
     if (consume('*'))
-      node = new_node(ND_MUL, node, mul());
+      node = new_node(ND_MUL, node, term());
     else if (consume('/'))
-      node = new_node(ND_DIV, node, mul());
+      node = new_node(ND_DIV, node, term());
     else
       return node;
   }
