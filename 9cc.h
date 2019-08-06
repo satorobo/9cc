@@ -8,6 +8,7 @@
 // Kind of Tokens
 typedef enum {
   TK_RESERVED, // Token of Symbol
+  TK_IDENT,    // Identifer of Variable
   TK_NUM,      // Token of Integer
   TK_EOF,      // Token of End Of File
 } TokenKind;
@@ -24,15 +25,17 @@ struct Token {
 
 // Kind of abstract syntax tree(AST)
 typedef enum {
-   ND_ADD, // +
-   ND_SUB, // -
-   ND_MUL, // *
-   ND_DIV, // /
-   ND_LT,  // <
-   ND_LE,  // <=
-   ND_EQ,  // ==
-   ND_NE,  // !=
-   ND_NUM, // Integer
+   ND_ADD,    // +
+   ND_SUB,    // -
+   ND_MUL,    // *
+   ND_DIV,    // /
+   ND_ASSIGN, // =
+   ND_LT,     // <
+   ND_LE,     // <=
+   ND_EQ,     // ==
+   ND_NE,     // !=
+   ND_LVAR,   // Local Variable
+   ND_NUM,    // Integer
 } NodeKind;
 
 typedef struct Node Node;
@@ -42,7 +45,14 @@ struct Node {
   Node *lhs;     // Left-hand side childe node
   Node *rhs;     // Right-hand side childe node
   int val;       // It is only used when kind is ND_NUM
+  int offset;    // It is only used when kind is ND_LVAR
 };
+
+Node *code[100];
+
+void expect(char *op);
+int expect_number();
+bool consume(char *op);
 
 Node *term();
 Node *unary();
@@ -50,14 +60,19 @@ Node *mul();
 Node *add();
 Node *relational();
 Node *equality();
+Node *assign();
 Node *expr();
+Node *stmt();
+void program();
 
 // Inputed program string
 char *user_input;
 
 // The Token currently focused on
 Token *token;
+Token *new_token(TokenKind kind, Token *cur, char *str);
 Token *tokenize(char *p);
+Token *consume_ident();
 
 void gen(Node *node);
 

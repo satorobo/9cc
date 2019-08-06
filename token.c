@@ -1,11 +1,10 @@
 #include "9cc.h"
 
 // Create new token and connect cur
-Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
+Token *new_token(TokenKind kind, Token *cur, char *str) {
   Token *tok = calloc(1, sizeof(Token));
   tok->kind = kind;
   tok->str = str;
-  tok->len = len;
   cur->next = tok;
   return tok;
 }
@@ -25,7 +24,8 @@ Token *tokenize(char *p) {
 
     if (strncmp(p, "<=", 2) == 0 || strncmp(p, ">=", 2) == 0 ||
         strncmp(p, "!=", 2) == 0 || strncmp(p, "==", 2) == 0) {
-      cur = new_token(TK_RESERVED, cur, p, 2);
+      cur = new_token(TK_RESERVED, cur, p);
+      cur->len = 2;
       p += 2;
       continue;
     }
@@ -33,14 +33,24 @@ Token *tokenize(char *p) {
     if(strncmp(p, "<", 1) == 0 || strncmp(p, ">", 1) == 0 ||
        strncmp(p, "+", 1) == 0 || strncmp(p, "-", 1) == 0 ||
        strncmp(p, "*", 1) == 0 || strncmp(p, "/", 1) == 0 ||
-       strncmp(p, "(", 1) == 0 || strncmp(p, ")", 1) == 0 ) {
-      cur = new_token(TK_RESERVED, cur, p, 1);
+       strncmp(p, "(", 1) == 0 || strncmp(p, ")", 1) == 0 ||
+       strncmp(p, "=", 1) == 0 || strncmp(p, ";", 1) == 0) {
+      cur = new_token(TK_RESERVED, cur, p);
+      cur->len = 1;
       p += 1;
       continue;
     }
 
+    if ('a' <= *p && *p <= 'z') {
+      cur = new_token(TK_IDENT, cur, p);
+      cur->len = 1;
+      p += 1;
+      continue;
+    }
+    
     if (isdigit(*p)) {
-      cur = new_token(TK_NUM, cur, p, 1);
+      cur = new_token(TK_NUM, cur, p);
+      cur->len = 1;
       cur->val = strtol(p, &p, 10);
       continue;
     }
@@ -48,7 +58,7 @@ Token *tokenize(char *p) {
     error_at(cur->str, "Unable to tokenize");
   }
 
-  new_token(TK_EOF, cur, p, 1);
+  new_token(TK_EOF, cur, p);
   return head.next;
 }
 

@@ -6,7 +6,7 @@ void expect(char *op) {
   if (token->kind != TK_RESERVED ||
       strlen(op) != token->len ||
       memcmp(token->str, op, token->len))
-    error_at(token->str, "Not '%c'", op);
+    error_at(token->str, "Not '%s'", op);
   token = token->next;
 }
 
@@ -29,6 +29,12 @@ bool consume(char *op) {
     return false;
   token = token->next;
   return true;
+}
+
+Token *consume_ident() {
+  if (token->kind == TK_IDENT)
+    return token;
+  return NULL;
 }
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
@@ -54,6 +60,15 @@ Node *term(){
     return node;
   }
 
+  Token *tok = consume_ident();
+  if (tok) {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_LVAR;
+    node->offset = (tok->str[0] - 'a' + 1) * 8;
+    token = token->next;
+    return node;
+  }
+  
   // Otherwise it must be number
   return new_node_num(expect_number());
 }
@@ -124,8 +139,26 @@ Node *equality() {
 
 }
 
-Node *expr() {
+Node *assign() {
   Node *node = equality();
-
+  if(consume("="))
+    node = new_node(ND_ASSIGN, node, assign());
   return node;
+}
+
+Node *expr() {
+  return assign();
+}
+
+Node *stmt() {
+  Node *node = expr();
+  expect(";");
+  return node;
+}
+
+void program() {
+  int i = 0;
+  while (!at_eof())
+    code[i++] = stmt();
+  code[i] = NULL;
 }
