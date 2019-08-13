@@ -32,8 +32,20 @@ bool consume(char *op) {
 }
 
 Token *consume_ident() {
-  if (token->kind == TK_IDENT)
-    return token;
+  Token *tok = NULL;
+  if (token->kind == TK_IDENT) {
+    tok = token;
+    token = token->next;
+  }
+  return tok;
+}
+
+// Search local variable by it's name.
+// In the case that the local variable doesn't exist before, return NULL.
+LVar *find_lvar(Token *tok) {
+  for (LVar *var = locals; var; var = var->next) 
+    if (var->len == tok->len && !memcmp(tok->str, var->name, var->len)) 
+      return var;
   return NULL;
 }
 
@@ -64,11 +76,23 @@ Node *term(){
   if (tok) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_LVAR;
-    node->offset = (tok->str[0] - 'a' + 1) * 8;
-    token = token->next;
+    
+    LVar *lvar = find_lvar(tok);
+    if (lvar) {
+      node->offset = lvar->offset;
+    } else {
+      lvar = calloc(1, sizeof(LVar));
+      lvar->next = locals;
+      lvar->name = tok->str;
+      lvar->len = tok->len;
+      lvar->offset = locals->offset + 8;
+      node->offset = lvar->offset;
+      locals = lvar;
+    }
+
     return node;
   }
-  
+
   // Otherwise it must be number
   return new_node_num(expect_number());
 }

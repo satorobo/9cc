@@ -34,5 +34,7 @@ try 1 "10 * 10 / 2 + 20 * 3 - 10 != 10;"
 try 1 "a = 3-2;"
 try 9 "a = 3-2; b = 10; b-a;"
 try 55 "a = 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10;"
+try 1 "hoge = 3-2;"
+try 9 "hoge = 3-2; foo = 10; foo-hoge;"
 
 echo OK

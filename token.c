@@ -41,10 +41,15 @@ Token *tokenize(char *p) {
       continue;
     }
 
-    if ('a' <= *p && *p <= 'z') {
-      cur = new_token(TK_IDENT, cur, p);
-      cur->len = 1;
-      p += 1;
+    if ('a' <= *p && *p <= 'z' || 'A' <= *p && *p <= 'Z') {
+      char *lvalstart = p;
+      int lvallen = 0;
+      while (isalnum(*p) || *p == '_') {
+        p++;
+        lvallen++;
+      }
+      cur = new_token(TK_IDENT, cur, lvalstart);
+      cur->len = lvallen;
       continue;
     }
     
@@ -59,6 +64,8 @@ Token *tokenize(char *p) {
   }
 
   new_token(TK_EOF, cur, p);
+
+  token = head.next;
   return head.next;
 }
 

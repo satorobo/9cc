@@ -38,6 +38,16 @@ typedef enum {
    ND_NUM,    // Integer
 } NodeKind;
 
+typedef struct LVar LVar;
+
+// Type of local variable
+struct LVar {
+  LVar *next;  // next local variable or NULL
+  char *name;  // name of local variable
+  int len;     // length of name 
+  int offset;  // offset from RBP
+};
+
 typedef struct Node Node;
 // Type of nodes of abstract syntax tree
 struct Node {
@@ -73,6 +83,9 @@ Token *token;
 Token *new_token(TokenKind kind, Token *cur, char *str);
 Token *tokenize(char *p);
 Token *consume_ident();
+
+// Local variable
+LVar *locals;
 
 void gen(Node *node);
 

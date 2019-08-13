@@ -1,6 +1,7 @@
 #include "9cc.h"
 
 int main(int argc, char **argv) {
+  locals = calloc(1, sizeof(LVar));
   if (argc != 2) {
     fprintf(stderr, "Number of arguments is invalid.\n");
     return 1;
@@ -19,10 +20,14 @@ int main(int argc, char **argv) {
   printf("main:\n");
 
   // Prologue
-  // Allocation of local variables(a-z)
+  // Allocation of local variable
   printf("  push rbp\n");
   printf("  mov rbp, rsp\n");
-  printf("  sub rsp, 208\n");
+
+  int sp_offset = 0;
+  for (LVar *var = locals; var->next; var = var->next)
+    sp_offset += 8;
+  printf("  sub rsp, %d\n", sp_offset);
 
   // Generate asembly code going down abstract syntax tree
   for (int i = 0; code[i]; i++) {
