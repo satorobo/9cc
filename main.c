@@ -1,7 +1,6 @@
 #include "9cc.h"
 
 int main(int argc, char **argv) {
-  locals = calloc(1, sizeof(LVar));
   if (argc != 2) {
     fprintf(stderr, "Number of arguments is invalid.\n");
     return 1;
@@ -10,6 +9,7 @@ int main(int argc, char **argv) {
   // Tokenize and parse
   // The results of tokenize are stored in code array
   user_input = argv[1];
+  locals = calloc(1, sizeof(LVar));
   token = tokenize(user_input);
   program();
   

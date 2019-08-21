@@ -13,7 +13,7 @@ void expect(char *op) {
 // If a next token is a number, update token to next one and return that number.
 // Otherwise report an error.
 int expect_number() {
-  if (token->kind != TK_NUM) 
+  if (token->kind != TK_NUM)
     error_at(token->str, "Not number");
   int val = token->val;
   token = token->next;
@@ -23,7 +23,7 @@ int expect_number() {
 // If a next token is expected symbol, update token to next one and return true.
 // Otherwise return false.
 bool consume(char *op) {
-  if (token->kind != TK_RESERVED ||
+  if (token->kind != TK_RESERVED && token->kind != TK_RETURN ||
       strlen(op) != token->len ||
       memcmp(token->str, op, token->len))
     return false;
@@ -175,8 +175,19 @@ Node *expr() {
 }
 
 Node *stmt() {
-  Node *node = expr();
-  expect(";");
+  Node *node;
+
+  if (consume("return")) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_RETURN;
+    node->lhs = expr();
+  } else {
+    node = expr();
+  }
+
+  if (!consume(";"))
+    error_at(token->str, "Not \';\' token.");
+
   return node;
 }
 

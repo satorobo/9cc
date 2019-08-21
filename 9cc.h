@@ -10,6 +10,7 @@ typedef enum {
   TK_RESERVED, // Token of Symbol
   TK_IDENT,    // Identifer of Variable
   TK_NUM,      // Token of Integer
+  TK_RETURN,   // Token of "return"
   TK_EOF,      // Token of End Of File
 } TokenKind;
 
@@ -35,6 +36,7 @@ typedef enum {
    ND_EQ,     // ==
    ND_NE,     // !=
    ND_LVAR,   // Local Variable
+   ND_RETURN, // "return"
    ND_NUM,    // Integer
 } NodeKind;
 
